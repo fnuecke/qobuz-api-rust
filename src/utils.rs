@@ -568,7 +568,7 @@ pub fn read_app_credentials_from_env() -> Result<(Option<String>, Option<String>
     if Path::new(".env").exists()
         && let Err(e) = from_path(".env")
     {
-        eprintln!("Warning: Failed to load .env file: {}", e);
+        log::warn!("Failed to load .env file: {}", e);
     }
 
     let app_id = var("QOBUZ_APP_ID").ok();

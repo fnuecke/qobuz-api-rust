@@ -169,9 +169,7 @@ impl QobuzApiService {
 
         if let Some(track_ids) = album.track_ids {
             let total_tracks = track_ids.len();
-            println!();
-            println!("Album contains {} tracks", total_tracks);
-            println!();
+            log::info!("Album contains {} tracks", total_tracks);
 
             // Create the directory structure as provided in path parameter
             let album_dir = path;
@@ -198,7 +196,7 @@ impl QobuzApiService {
                 let sanitized_filename = sanitize_filename(&track_filename);
                 let track_path = format!("{}/{}.{}", album_dir, sanitized_filename, file_extension);
 
-                println!(
+                log::info!(
                     "Downloading track {}/{}: {} - {}",
                     index + 1,
                     total_tracks,
@@ -218,7 +216,7 @@ impl QobuzApiService {
                     Err(ApiErrorResponse { message, .. })
                         if message.contains("Invalid Request Signature parameter") =>
                     {
-                        eprintln!(
+                        log::warn!(
                             "Invalid signature detected during album download, attempting to refresh app credentials..."
                         );
 
@@ -247,12 +245,7 @@ impl QobuzApiService {
                             }
 
                             Err(e) => {
-                                eprintln!("Failed to refresh credentials: {}", e);
-                                return Err(ApiErrorResponse {
-                                    code: 400.to_string(),
-                                    message,
-                                    status: "error".to_string(),
-                                });
+                                return Err(e);
                             }
                         }
                     }
@@ -264,12 +257,11 @@ impl QobuzApiService {
                 }
             }
 
-            println!();
-            println!(
+            log::info!(
                 "Album download completed: {}/{} tracks downloaded",
-                total_tracks, total_tracks
+                total_tracks,
+                total_tracks
             );
-            println!();
         }
 
         Ok(())

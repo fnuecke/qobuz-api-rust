@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::io::{Write, stdin};
 
 use {dotenvy::dotenv, tokio::main};
 
@@ -25,6 +25,12 @@ use qobuz_api_rust::{
 /// ```
 #[main]
 async fn main() -> Result<(), QobuzApiError> {
+    #[cfg(feature = "env_logger")]
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|b, r| writeln!(b, "{}: {}", r.level(), r.args()))
+        .init();
+
     println!("Qobuz API Rust Client");
 
     // Load environment variables from .env file

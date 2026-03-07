@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs::{read_dir, read_to_string, write},
+    io::Write,
     path::Path,
 };
 
@@ -9,6 +10,11 @@ use regex::Regex;
 // Function to read all comparison report files and generate a final markdown report
 // Grouped by format and field, showing all cases for each category
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|b, r| writeln!(b, "{}: {}", r.level(), r.args()))
+        .init();
+
     println!("Generating comprehensive metadata comparison report...");
 
     let reports_dir = Path::new("metadata_test/reports");

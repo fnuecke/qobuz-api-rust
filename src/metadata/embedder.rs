@@ -564,14 +564,11 @@ pub async fn embed_metadata_in_file(
                 }
 
                 Err(e) => {
-                    eprintln!(
-                        "Warning: Could not download album cover from URL: {} - {}",
-                        url, e
-                    );
+                    log::warn!("Could not download album cover from URL: {} - {}", url, e);
                 }
             }
         } else {
-            eprintln!("Warning: No album cover image URL available");
+            log::warn!("No album cover image URL available");
         }
     }
 

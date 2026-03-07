@@ -117,7 +117,7 @@ impl QobuzApiService {
         if let Ok((Some(cached_app_id), Some(cached_app_secret))) = read_app_credentials_from_env()
         {
             if !cached_app_id.is_empty() && !cached_app_secret.is_empty() {
-                println!("Using cached credentials from .env file");
+                log::info!("Using cached credentials from .env file");
 
                 // Try to initialize with cached credentials
                 match Self::with_credentials(
@@ -130,7 +130,7 @@ impl QobuzApiService {
                         return Ok(service);
                     }
                     Err(e) => {
-                        println!(
+                        log::warn!(
                             "Cached credentials failed to initialize ({}), fetching new ones...",
                             e
                         );
@@ -138,7 +138,7 @@ impl QobuzApiService {
                 }
             }
         } else {
-            println!("No cached credentials found, fetching new ones...");
+            log::info!("No cached credentials found, fetching new ones...");
         }
 
         // Fetch fresh credentials from web player
@@ -157,9 +157,9 @@ impl QobuzApiService {
 
         // Store the fetched credentials in .env file for future use
         if let Err(e) = write_app_credentials_to_env(&app_id, &app_secret) {
-            eprintln!("Warning: Failed to write credentials to .env file: {}", e);
+            log::warn!("Failed to write credentials to .env file: {}", e);
         } else {
-            println!("Successfully stored new credentials in .env file");
+            log::info!("Successfully stored new credentials in .env file");
         }
 
         Self::with_credentials(Some(app_id), Some(app_secret)).await
@@ -313,7 +313,7 @@ impl QobuzApiService {
             && !uid.is_empty()
             && !token.is_empty()
         {
-            println!("Using token-based authentication");
+            log::info!("Using token-based authentication");
             return self.login_with_token(uid, token).await;
         }
 
@@ -322,7 +322,7 @@ impl QobuzApiService {
             && !em.is_empty()
             && !pwd.is_empty()
         {
-            println!("Using email/password authentication");
+            log::info!("Using email/password authentication");
             return self.login(em, pwd).await;
         }
 
@@ -331,7 +331,7 @@ impl QobuzApiService {
             && !un.is_empty()
             && !pwd.is_empty()
         {
-            println!("Using username/password authentication");
+            log::info!("Using username/password authentication");
             return self.login(un, pwd).await;
         }
 
@@ -420,7 +420,7 @@ impl QobuzApiService {
     /// }
     /// ```
     pub async fn refresh_app_credentials(&self) -> Result<Self, QobuzApiError> {
-        println!("Fetching new app credentials from web player...");
+        log::info!("Fetching new app credentials from web player...");
 
         // Fetch fresh credentials from web player
         let app_id = get_web_player_app_id()
@@ -438,9 +438,9 @@ impl QobuzApiService {
 
         // Store the new credentials in .env file
         if let Err(e) = write_app_credentials_to_env(&app_id, &app_secret) {
-            eprintln!("Warning: Failed to update credentials in .env file: {}", e);
+            log::warn!("Failed to update credentials in .env file: {}", e);
         } else {
-            println!("Successfully updated credentials in .env file");
+            log::info!("Successfully updated credentials in .env file");
         }
 
         // Create a new service instance with the updated credentials and preserve the user auth token

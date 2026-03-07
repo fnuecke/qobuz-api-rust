@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     fs::{create_dir_all, write},
+    io::Write,
 };
 
 use {serde_json::to_string_pretty, tokio::main};
@@ -41,6 +42,11 @@ const FLAC_HIRES_FORMAT_ID: &str = "27"; // FLAC Hi-Res 24bit/192kHz
 
 #[main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|b, r| writeln!(b, "{}: {}", r.level(), r.args()))
+        .init();
+
     println!("Starting automated track download for metadata testing...");
 
     // Initialize the Qobuz API service

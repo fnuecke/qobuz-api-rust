@@ -2,6 +2,7 @@ use std::{
     collections::HashMap,
     error::Error,
     fs::{create_dir_all, read_dir, read_to_string, write},
+    io::Write,
     path::Path,
 };
 
@@ -88,6 +89,11 @@ impl Metadata {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|b, r| writeln!(b, "{}: {}", r.level(), r.args()))
+        .init();
+
     println!("Starting metadata comparison process...");
 
     // Create reports directory

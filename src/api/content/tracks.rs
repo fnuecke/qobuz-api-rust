@@ -144,7 +144,7 @@ impl QobuzApiService {
             }) => {
                 // Check if this is the signature error that indicates invalid app credentials
                 if message.contains("Invalid Request Signature parameter") {
-                    eprintln!(
+                    log::warn!(
                         "Invalid signature detected, attempting to refresh app credentials..."
                     );
 
@@ -171,7 +171,7 @@ impl QobuzApiService {
                         }
 
                         Err(e) => {
-                            eprintln!("Failed to refresh credentials: {}", e);
+                            log::error!("Failed to refresh credentials: {}", e);
                             Err(ApiErrorResponse {
                                 code,
                                 message,
@@ -389,7 +389,7 @@ impl QobuzApiService {
                     };
 
                     // Embed metadata in the downloaded file
-                    println!("Embedding metadata in {}", path);
+                    log::info!("Embedding metadata in {}", path);
                     embed_metadata_in_file(path, &track, &album, &artist, config)
                         .await
                         .map_err(|e| MetadataError {

@@ -1,6 +1,11 @@
-use std::{error::Error, fs::create_dir_all, process::Command};
+use std::{error::Error, fs::create_dir_all, io::Write, process::Command};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|b, r| writeln!(b, "{}: {}", r.level(), r.args()))
+        .init();
+
     println!("Starting metadata extraction process...");
 
     // Create directories for metadata output
