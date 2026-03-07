@@ -326,6 +326,7 @@ impl QobuzApiService {
                     // Get the response body as bytes stream
                     let mut stream = response.bytes_stream();
 
+                    #[cfg(feature = "progress_logging")]
                     let mut downloaded: u64 = 0;
 
                     while let Some(chunk_result) = stream.next().await {
@@ -335,25 +336,30 @@ impl QobuzApiService {
                         dest.write_all(&chunk).map_err(|e| DownloadError {
                             message: format!("Failed to write chunk to file: {}", e),
                         })?;
-                        downloaded += chunk.len() as u64;
 
                         // Print progress if we know the total size
-                        if let Some(total) = content_length {
-                            print!(
-                                "\rProgress: {}/{} bytes ({:.2}%)",
-                                downloaded,
-                                total,
-                                (downloaded as f64 / total as f64) * 100.0
-                            );
-                        } else {
-                            print!("\rDownloaded: {} bytes", downloaded);
+                        #[cfg(feature = "progress_logging")]
+                        {
+                            downloaded += chunk.len() as u64;
+
+                            if let Some(total) = content_length {
+                                print!(
+                                    "\rProgress: {}/{} bytes ({:.2}%)",
+                                    downloaded,
+                                    total,
+                                    (downloaded as f64 / total as f64) * 100.0
+                                );
+                            } else {
+                                print!("\rDownloaded: {} bytes", downloaded);
+                            }
+                            stdout().flush().map_err(|e| DownloadError {
+                                message: format!("Failed to flush stdout: {}", e),
+                            })?;
                         }
-                        stdout().flush().map_err(|e| DownloadError {
-                            message: format!("Failed to flush stdout: {}", e),
-                        })?;
                     }
 
                     // Add a new line after progress display
+                    #[cfg(feature = "progress_logging")]
                     println!();
 
                     // Flush the writer to ensure all data is written
