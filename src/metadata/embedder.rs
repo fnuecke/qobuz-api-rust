@@ -20,6 +20,7 @@ use lofty::{
         ItemValue::{self, Text},
         Tag, TagItem,
         TagType::{Id3v2, VorbisComments},
+        items::Timestamp,
     },
 };
 
@@ -238,11 +239,10 @@ pub async fn embed_metadata_in_file(
         let producers = extract_producers_from_performers(performers_str);
         for producer in producers {
             // Lofty uses "PRODUCER" as the tag for Vorbis Comments (FLAC)
-            let tag_item = TagItem::new(
-                ItemKey::from_key(VorbisComments, "PRODUCER"),
-                Text(producer.clone()),
-            );
-            tag.push(tag_item);
+            if let Some(key) = ItemKey::from_key(VorbisComments, "PRODUCER") {
+                let tag_item = TagItem::new(key, Text(producer.clone()));
+                tag.push(tag_item);
+            }
         }
     }
 
@@ -422,23 +422,23 @@ pub async fn embed_metadata_in_file(
 
     // Determine the primary date string (YYYY-MM-DD) and year (YYYY)
     let mut primary_date_full: Option<String> = None;
-    let mut primary_year: Option<u32> = None;
+    let mut primary_year: Option<u16> = None;
 
     // Prioritize album release dates, then track release dates, then timestamp
     if let Some(ref release_date) = album.release_date_download {
         primary_date_full = Some(release_date.clone());
         if let Some(year_str) = release_date.split('-').next() {
-            primary_year = year_str.parse::<u32>().ok();
+            primary_year = year_str.parse::<u16>().ok();
         }
     } else if let Some(ref release_date) = album.release_date_original {
         primary_date_full = Some(release_date.clone());
         if let Some(year_str) = release_date.split('-').next() {
-            primary_year = year_str.parse::<u32>().ok();
+            primary_year = year_str.parse::<u16>().ok();
         }
     } else if let Some(ref release_date) = track.release_date_original {
         primary_date_full = Some(release_date.clone());
         if let Some(year_str) = release_date.split('-').next() {
-            primary_year = year_str.parse::<u32>().ok();
+            primary_year = year_str.parse::<u16>().ok();
         }
     } else if let Some(released_at) = album.released_at {
         let (date_str, year_num) = timestamp_to_date_and_year(released_at);
@@ -450,7 +450,10 @@ pub async fn embed_metadata_in_file(
     if config.release_year
         && let Some(year) = primary_year
     {
-        tag.set_year(year);
+        tag.set_date(Timestamp {
+            year,
+            ..Default::default()
+        });
     }
 
     if config.release_date {
@@ -552,12 +555,11 @@ pub async fn embed_metadata_in_file(
             match download_image(url).await {
                 Ok(image_data) => {
                     // Create picture with proper format to match C# implementation
-                    let picture = Picture::new_unchecked(
-                        CoverFront,           // Picture Type: Front Cover (as in C# implementation)
-                        Some(Jpeg),           // MIME Type: image/jpeg (as in C# implementation)
-                        Some("".to_string()), // Empty description (as in C# implementation)
-                        image_data,
-                    );
+                    let picture = Picture::unchecked(image_data)
+                        .pic_type(CoverFront) // Picture Type: Front Cover (as in C# implementation)
+                        .mime_type(Jpeg) // MIME Type: image/jpeg (as in C# implementation)
+                        .description("".to_string()) // Empty description (as in C# implementation)
+                        .build();
 
                     // Add the picture to the tag
                     tag.push_picture(picture);

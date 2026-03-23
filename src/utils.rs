@@ -713,7 +713,7 @@ pub async fn download_image(url: &str) -> Result<Vec<u8>, QobuzApiError> {
 ///
 /// A tuple containing:
 /// - `Option<String>`: The formatted date string "YYYY-MM-DD", or `None` if the conversion fails.
-/// - `Option<u32>`: The year as a `u32`, or `None` if the conversion fails.
+/// - `Option<u16>`: The year as a `u16`, or `None` if the conversion fails.
 ///
 /// # Examples
 ///
@@ -726,7 +726,7 @@ pub async fn download_image(url: &str) -> Result<Vec<u8>, QobuzApiError> {
 /// assert_eq!(date_str, Some("2023-10-27".to_string()));
 /// assert_eq!(year, Some(2023));
 /// ```
-pub fn timestamp_to_date_and_year(timestamp: i64) -> (Option<String>, Option<u32>) {
+pub fn timestamp_to_date_and_year(timestamp: i64) -> (Option<String>, Option<u16>) {
     // Number of seconds in a day
     const SECONDS_PER_DAY: i64 = 86_400;
 
@@ -777,6 +777,6 @@ pub fn timestamp_to_date_and_year(timestamp: i64) -> (Option<String>, Option<u32
         (None, None)
     } else {
         let date_str = format!("{:04}-{:02}-{:02}", year, month, day);
-        (Some(date_str), Some(year as u32))
+        (Some(date_str), Some(year as u16))
     }
 }
