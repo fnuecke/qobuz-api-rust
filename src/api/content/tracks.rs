@@ -286,6 +286,44 @@ impl QobuzApiService {
         path: &str,
         config: &MetadataConfig,
     ) -> Result<(), QobuzApiError> {
+        #[cfg(feature = "progress_logging")]
+        let progress_callback = |downloaded, total| {
+            if let Some(total) = total {
+                print!(
+                    "\rProgress: {}/{} bytes ({:.2}%)",
+                    downloaded,
+                    total,
+                    (downloaded as f64 / total as f64) * 100.0
+                );
+
+                if downloaded == total {
+                    println!();
+                }
+            } else {
+                print!("\rDownloaded: {} bytes", downloaded);
+            }
+
+            stdout().flush().ok();
+        };
+
+        #[cfg(not(feature = "progress_logging"))]
+        let progress_callback = |_, _| {};
+
+        self.download_track_with_progress(track_id, format_id, path, config, progress_callback)
+            .await
+    }
+
+    pub async fn download_track_with_progress<F>(
+        &self,
+        track_id: &str,
+        format_id: &str,
+        path: &str,
+        config: &MetadataConfig,
+        progress_callback: F,
+    ) -> Result<(), QobuzApiError>
+    where
+        F: Fn(u64, Option<u64>),
+    {
         match self.get_track_file_url(track_id, format_id).await {
             Ok(file_url) => {
                 if let Some(url) = file_url.url {
@@ -326,7 +364,6 @@ impl QobuzApiService {
                     // Get the response body as bytes stream
                     let mut stream = response.bytes_stream();
 
-                    #[cfg(feature = "progress_logging")]
                     let mut downloaded: u64 = 0;
 
                     while let Some(chunk_result) = stream.next().await {
@@ -337,30 +374,12 @@ impl QobuzApiService {
                             message: format!("Failed to write chunk to file: {}", e),
                         })?;
 
-                        // Print progress if we know the total size
-                        #[cfg(feature = "progress_logging")]
-                        {
-                            downloaded += chunk.len() as u64;
+                        downloaded += chunk.len() as u64;
 
-                            if let Some(total) = content_length {
-                                print!(
-                                    "\rProgress: {}/{} bytes ({:.2}%)",
-                                    downloaded,
-                                    total,
-                                    (downloaded as f64 / total as f64) * 100.0
-                                );
-                            } else {
-                                print!("\rDownloaded: {} bytes", downloaded);
-                            }
-                            stdout().flush().map_err(|e| DownloadError {
-                                message: format!("Failed to flush stdout: {}", e),
-                            })?;
-                        }
+                        progress_callback(downloaded, content_length);
                     }
 
-                    // Add a new line after progress display
-                    #[cfg(feature = "progress_logging")]
-                    println!();
+                    progress_callback(downloaded, Some(downloaded));
 
                     // Flush the writer to ensure all data is written
                     dest.flush().map_err(|e| DownloadError {
