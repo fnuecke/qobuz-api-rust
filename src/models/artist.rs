@@ -87,4 +87,9 @@ pub struct Artist {
     /// Additional information about the artist as raw JSON value
     #[serde(rename = "information")]
     pub information: Option<Value>,
+
+    /// Unix timestamp of when the artist was added to user favorites
+    /// Only available when track object was returned from getUserFavorites
+    #[serde(rename = "favorited_at")]
+    pub favorited_at: Option<i64>,
 }

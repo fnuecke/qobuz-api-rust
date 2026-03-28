@@ -143,4 +143,9 @@ pub struct Track {
     /// Whether the track has parental content warnings
     #[serde(rename = "parental_warning")]
     pub parental_warning: Option<bool>,
+
+    /// Unix timestamp of when the track was added to user favorites
+    /// Only available when track object was returned from getUserFavorites
+    #[serde(rename = "favorited_at")]
+    pub favorited_at: Option<i64>,
 }

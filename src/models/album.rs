@@ -265,4 +265,9 @@ pub struct Album {
     /// List of track IDs included in the album
     #[serde(rename = "track_ids")]
     pub track_ids: Option<Vec<i32>>,
+
+    /// Unix timestamp of when the album was added to user favorites
+    /// Only available when track object was returned from getUserFavorites
+    #[serde(rename = "favorited_at")]
+    pub favorited_at: Option<i64>,
 }
